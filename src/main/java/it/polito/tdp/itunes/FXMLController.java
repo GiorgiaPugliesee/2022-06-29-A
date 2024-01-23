@@ -5,6 +5,7 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Model;
@@ -35,10 +36,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -51,16 +52,76 @@ public class FXMLController {
 
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
+    	this.txtResult.clear();
+    	Album a = this.cmbA1.getValue();
     	
+    	if(a == null) {
+    		this.txtResult.setText("Selezionare un album.");
+    		return;
+    	}
+    	
+    	List<Album> adiacenti = this.model.getAdiacenti(a);
+    	
+    	for(Album al : adiacenti) {
+    		this.txtResult.appendText(al + "; bilancio: " + al.getBilancio() + "\n");
+    	}
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
+    	this.txtResult.clear();
     	
+    	String input = this.txtX.getText();
+    	int inputNum = 0;
+    	try {
+    		inputNum = Integer.parseInt(input);
+    		
+    		Album source = this.cmbA1.getValue();
+    		Album target = this.cmbA2.getValue();
+    		
+    		if(source == null || target == null) {
+    			this.txtResult.setText("Inserire degli album.");
+    			return;
+    		}
+
+    		List<Album> path = this.model.buildPath(source, target, inputNum);
+    		
+    		if(path.isEmpty()) {
+    			this.txtResult.setText("Non è stato trovato nessun percorso.");
+    			return;
+    		} 
+    		
+    		for(Album al : path) {
+    			this.txtResult.appendText(al + "\n");
+    		}
+        	
+        	
+    	} catch(NumberFormatException e) {
+    		this.txtResult.setText("Inserire un valore valido.");
+    		return;
+    	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	String input = this.txtN.getText();
+    	int inputNum = 0;
+    	try {
+    		inputNum = Integer.parseInt(input);
+    		this.model.creaGrafo(inputNum);
+    		
+    		this.txtResult.appendText("Il grafo è stato creato correttamente.\n");
+        	this.txtResult.appendText("Vertici: " + this.model.getVertex() + "\n");
+        	this.txtResult.appendText("Archi: " + this.model.getEdge() + "\n");
+
+        	this.cmbA1.getItems().addAll(this.model.allVertex());
+        	this.cmbA2.getItems().addAll(this.model.allVertex());
+        	
+    	} catch(NumberFormatException e) {
+    		this.txtResult.setText("Inserire un valore valido.");
+    		return;
+    	}
+    	
     	
     }
 
@@ -80,5 +141,7 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	
     }
 }
